@@ -30,6 +30,26 @@
   color: var(--bcb-white);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.new-conversation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--bcb-line);
+}
+
+.form-error {
+  color: var(--bcb-urgent);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
 .state-box {
   display: flex;
   flex-direction: column;

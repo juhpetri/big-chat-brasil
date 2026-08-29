@@ -1,8 +1,63 @@
 <div class="conversations-page">
   <header class="page-header">
     <span class="display brand-name">BCB</span>
-    <a routerLink="/account" class="account-link">Minha conta</a>
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="toggleNewConversationForm()">
+        {{ showNewConversationForm() ? 'Cancelar' : '+ Nova conversa' }}
+      </button>
+      <a routerLink="/account" class="account-link">Minha conta</a>
+    </div>
   </header>
+
+  @if (showNewConversationForm()) {
+    <form class="new-conversation-form" (ngSubmit)="startConversation()">
+      <mat-form-field appearance="outline">
+        <mat-label>Destinatário (ID, ex.: telefone)</mat-label>
+        <input
+          matInput
+          name="recipientId"
+          autocomplete="off"
+          [ngModel]="recipientId()"
+          (ngModelChange)="recipientId.set($event)"
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Nome do destinatário (opcional)</mat-label>
+        <input
+          matInput
+          name="recipientName"
+          autocomplete="off"
+          [ngModel]="recipientName()"
+          (ngModelChange)="recipientName.set($event)"
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Primeira mensagem</mat-label>
+        <input
+          matInput
+          name="draft"
+          autocomplete="off"
+          [ngModel]="draft()"
+          (ngModelChange)="draft.set($event)"
+        />
+      </mat-form-field>
+      <mat-button-toggle-group [value]="priority()" (change)="priority.set($event.value)" aria-label="Prioridade">
+        <mat-button-toggle value="NORMAL">Normal · R$0,25</mat-button-toggle>
+        <mat-button-toggle value="URGENT">Urgente · R$0,50</mat-button-toggle>
+      </mat-button-toggle-group>
+      @if (formError()) {
+        <p class="form-error">{{ formError() }}</p>
+      }
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        [disabled]="sending() || !recipientId().trim() || !draft().trim()"
+      >
+        {{ sending() ? 'Enviando…' : 'Iniciar conversa' }}
+      </button>
+    </form>
+  }
 
   @switch (conversationsService.state()) {
     @case ('loading') {

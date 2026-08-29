@@ -72,6 +72,7 @@ class MessageServiceTest {
 
         SendMessageResponse response = messageService.send(clientId, request);
 
+        assertThat(response.conversationId()).isEqualTo(conversationId);
         assertThat(response.cost()).isEqualByComparingTo(MessagePriority.NORMAL.getCost());
         assertThat(response.currentBalance()).isEqualByComparingTo(client.balance());
         verify(conversationService).touchLastMessageAt(any(), any());

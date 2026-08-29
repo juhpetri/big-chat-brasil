@@ -22,6 +22,7 @@ export interface SendMessageRequest {
 
 export interface SendMessageResponse {
   id: string;
+  conversationId: string;
   status: MessageStatus;
   timestamp: string;
   estimatedDelivery: string;

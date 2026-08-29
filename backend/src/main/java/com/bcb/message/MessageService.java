@@ -53,7 +53,7 @@ public class MessageService {
         conversationService.touchLastMessageAt(conversationId, savedMessage.getQueuedAt());
         messageQueueService.enqueue(savedMessage);
 
-        return toResponse(savedMessage, client);
+        return toResponse(savedMessage, conversationId, client);
     }
 
     public List<MessageResponse> listByConversation(UUID conversationId) {
@@ -103,11 +103,11 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
-    private SendMessageResponse toResponse(Message message, ClientResponse client) {
+    private SendMessageResponse toResponse(Message message, UUID conversationId, ClientResponse client) {
         LocalDateTime estimatedDelivery = message.getQueuedAt().plusSeconds(ESTIMATED_DELIVERY_SECONDS);
         BigDecimal currentBalance = client.planType() == PlanType.PREPAID ? client.balance() : null;
 
-        return new SendMessageResponse(message.getId(), message.getStatus(), message.getQueuedAt(),
+        return new SendMessageResponse(message.getId(), conversationId, message.getStatus(), message.getQueuedAt(),
                 estimatedDelivery, message.getCost(), currentBalance);
     }
 }

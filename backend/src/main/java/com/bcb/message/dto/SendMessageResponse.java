@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public record SendMessageResponse(
         UUID id,
+        @Schema(description = "Id da conversa resolvida (ou criada, se era a primeira mensagem pra esse destinatário)")
+        UUID conversationId,
         MessageStatus status,
         @Schema(description = "Data/hora em que a mensagem foi enfileirada")
         LocalDateTime timestamp,
