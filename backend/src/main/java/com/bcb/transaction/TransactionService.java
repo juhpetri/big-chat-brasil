@@ -15,12 +15,13 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
 
-    public void record(UUID clientId, UUID messageId, TransactionType type, BigDecimal amount) {
+    public void record(UUID clientId, UUID messageId, TransactionType type, BigDecimal amount, String description) {
         Transaction transaction = new Transaction();
         transaction.setClientId(clientId);
         transaction.setMessageId(messageId);
         transaction.setType(type);
         transaction.setAmount(amount);
+        transaction.setDescription(description);
         transactionRepository.save(transaction);
     }
 

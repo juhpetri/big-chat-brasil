@@ -187,6 +187,9 @@
                 <span class="badge" [class.credit]="t.type === 'CREDIT'" [class.debit]="t.type === 'DEBIT'">
                   {{ t.type === 'CREDIT' ? 'crédito' : 'débito' }}
                 </span>
+                @if (t.description) {
+                  <span class="description">{{ t.description }}</span>
+                }
                 <span class="mono">R$ {{ t.amount | number: '1.2-2' }}</span>
                 <span class="mono timestamp">{{ t.timestamp | date: 'dd/MM HH:mm' }}</span>
               </li>

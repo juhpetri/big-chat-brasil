@@ -86,7 +86,8 @@ class ClientServiceTest {
         clientService.chargeForMessage(clientId, MessagePriority.NORMAL);
 
         verify(billingService).validateAndCharge(client, MessagePriority.NORMAL);
-        verify(transactionService).record(clientId, null, TransactionType.DEBIT, MessagePriority.NORMAL.getCost());
+        verify(transactionService).record(clientId, null, TransactionType.DEBIT, MessagePriority.NORMAL.getCost(),
+                "Envio de mensagem normal");
     }
 
     @Test
@@ -111,7 +112,8 @@ class ClientServiceTest {
         ClientResponse response = clientService.addCredit(clientId, new BigDecimal("10.00"));
 
         assertThat(response.balance()).isEqualByComparingTo("15.00");
-        verify(transactionService).record(clientId, null, TransactionType.CREDIT, new BigDecimal("10.00"));
+        verify(transactionService).record(clientId, null, TransactionType.CREDIT, new BigDecimal("10.00"),
+                "Crédito adicionado");
     }
 
     @Test
@@ -133,7 +135,7 @@ class ClientServiceTest {
         assertThatThrownBy(() -> clientService.convertPlan(clientId, PlanType.PREPAID, new BigDecimal("10.00")))
                 .isInstanceOf(InvalidPlanOperationException.class);
 
-        verify(transactionService, never()).record(any(), any(), any(), any());
+        verify(transactionService, never()).record(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -145,7 +147,8 @@ class ClientServiceTest {
 
         ClientResponse response = clientService.convertPlan(clientId, PlanType.POSTPAID, new BigDecimal("50.00"));
 
-        verify(transactionService).record(clientId, null, TransactionType.CREDIT, new BigDecimal("3.50"));
+        verify(transactionService).record(clientId, null, TransactionType.CREDIT, new BigDecimal("3.50"),
+                "Conversão de plano para pós-pago");
         assertThat(response.planType()).isEqualTo(PlanType.POSTPAID);
         assertThat(client.getBalance()).isNull();
         assertThat(client.getMonthlyLimit()).isEqualByComparingTo("50.00");

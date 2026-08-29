@@ -265,6 +265,16 @@
   border: 1px solid var(--bcb-urgent-dim);
 }
 
+.description {
+  flex: 1;
+  min-width: 0;
+  color: var(--bcb-muted);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .timestamp {
   margin-left: auto;
   color: var(--bcb-muted);

@@ -61,7 +61,8 @@ public class ClientService {
         billingService.validateAndCharge(client, priority);
 
         Client chargedClient = clientRepository.save(client);
-        transactionService.record(clientId, null, TransactionType.DEBIT, priority.getCost());
+        transactionService.record(clientId, null, TransactionType.DEBIT, priority.getCost(),
+                "Envio de mensagem " + priorityLabel(priority));
         return chargedClient.toClientResponse();
     }
 
@@ -76,7 +77,7 @@ public class ClientService {
 
         client.setBalance(client.getBalance().add(amount));
         Client saved = clientRepository.save(client);
-        transactionService.record(clientId, null, TransactionType.CREDIT, amount);
+        transactionService.record(clientId, null, TransactionType.CREDIT, amount, "Crédito adicionado");
         return saved.toClientResponse();
     }
 
@@ -106,7 +107,8 @@ public class ClientService {
         BigDecimal residual = client.getPlanType() == PlanType.PREPAID
                 ? client.getBalance()
                 : client.getMonthlyLimit().subtract(client.getMonthlyUsage());
-        transactionService.record(clientId, null, TransactionType.CREDIT, residual);
+        transactionService.record(clientId, null, TransactionType.CREDIT, residual,
+                "Conversão de plano para " + planLabel(newPlanType));
 
         client.setPlanType(newPlanType);
         if (newPlanType == PlanType.PREPAID) {
@@ -121,6 +123,17 @@ public class ClientService {
 
         Client saved = clientRepository.save(client);
         return saved.toClientResponse();
+    }
+
+    private String priorityLabel(MessagePriority priority) {
+        return switch (priority) {
+            case NORMAL -> "normal";
+            case URGENT -> "urgente";
+        };
+    }
+
+    private String planLabel(PlanType planType) {
+        return planType == PlanType.PREPAID ? "pré-pago" : "pós-pago";
     }
 
     private void validateClientExistent(DocumentId documentId) {

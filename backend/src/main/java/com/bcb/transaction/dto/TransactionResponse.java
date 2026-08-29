@@ -13,5 +13,6 @@ public record TransactionResponse(
         UUID messageId,
         TransactionType type,
         BigDecimal amount,
+        String description,
         LocalDateTime timestamp) {
 }

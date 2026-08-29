@@ -9,6 +9,7 @@ export interface TransactionResponse {
   messageId: string | null;
   type: 'DEBIT' | 'CREDIT';
   amount: number;
+  description: string | null;
   timestamp: string;
 }
 

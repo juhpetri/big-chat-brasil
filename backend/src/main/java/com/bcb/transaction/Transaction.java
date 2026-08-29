@@ -31,6 +31,9 @@ public class Transaction {
     @Column(precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     private LocalDateTime timestamp;
 
     @PrePersist
@@ -39,6 +42,6 @@ public class Transaction {
     }
 
     public TransactionResponse toResponse() {
-        return new TransactionResponse(id, messageId, type, amount, timestamp);
+        return new TransactionResponse(id, messageId, type, amount, description, timestamp);
     }
 }

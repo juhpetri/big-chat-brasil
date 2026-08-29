@@ -31,7 +31,8 @@ class TransactionServiceTest {
         UUID clientId = UUID.randomUUID();
         UUID messageId = UUID.randomUUID();
 
-        transactionService.record(clientId, messageId, TransactionType.DEBIT, new BigDecimal("0.25"));
+        transactionService.record(clientId, messageId, TransactionType.DEBIT, new BigDecimal("0.25"),
+                "Envio de mensagem normal");
 
         ArgumentCaptor<Transaction> captor = ArgumentCaptor.forClass(Transaction.class);
         verify(transactionRepository).save(captor.capture());
@@ -41,6 +42,7 @@ class TransactionServiceTest {
         assertThat(saved.getMessageId()).isEqualTo(messageId);
         assertThat(saved.getType()).isEqualTo(TransactionType.DEBIT);
         assertThat(saved.getAmount()).isEqualByComparingTo("0.25");
+        assertThat(saved.getDescription()).isEqualTo("Envio de mensagem normal");
     }
 
     @Test
