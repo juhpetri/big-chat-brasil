@@ -1,0 +1,13 @@
+<div class="shell" [class.chat-open]="chatActive()">
+  <div class="list-panel">
+    <app-conversation-list />
+  </div>
+  <div class="chat-panel">
+    <router-outlet (activate)="chatActive.set(true)" (deactivate)="chatActive.set(false)" />
+    @if (!chatActive()) {
+      <div class="empty-chat-placeholder">
+        <p>Selecione uma conversa pra começar.</p>
+      </div>
+    }
+  </div>
+</div>

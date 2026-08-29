@@ -1,0 +1,198 @@
+<div class="account-page">
+  <header class="page-header">
+    <a routerLink="/conversations" class="back-link">← Conversas</a>
+    <span class="display brand-name">Minha conta</span>
+  </header>
+
+  @if (client(); as c) {
+    <section class="summary-card">
+      <div class="summary-row">
+        <span class="label">Nome</span>
+        <span>{{ c.name }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Plano</span>
+        <span>{{ c.planType === 'PREPAID' ? 'Pré-pago' : 'Pós-pago' }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">{{ c.planType === 'PREPAID' ? 'Saldo' : 'Limite restante' }}</span>
+        <span class="mono value">R$ {{ (c.planType === 'PREPAID' ? c.balance : c.limit) | number: '1.2-2' }}</span>
+      </div>
+    </section>
+
+    @if (c.planType === 'PREPAID') {
+      <form class="action-form" (ngSubmit)="submitCredit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Adicionar crédito (R$)</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0.01"
+            step="0.01"
+            name="creditAmount"
+            [ngModel]="creditAmount()"
+            (ngModelChange)="creditAmount.set($event)"
+          />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit">Adicionar</button>
+      </form>
+    } @else {
+      <form class="action-form" (ngSubmit)="submitLimit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Novo limite mensal (R$)</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            step="0.01"
+            name="newLimit"
+            [ngModel]="newLimit()"
+            (ngModelChange)="newLimit.set($event)"
+          />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit">Atualizar</button>
+      </form>
+    }
+
+    <div class="convert-block">
+      @if (!showConvertForm()) {
+        <button mat-stroked-button type="button" (click)="showConvertForm.set(true)">
+          Converter pra {{ targetPlanType() === 'PREPAID' ? 'pré-pago' : 'pós-pago' }}
+        </button>
+      } @else {
+        <form class="action-form" (ngSubmit)="submitConvertPlan()">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ targetPlanType() === 'PREPAID' ? 'Saldo inicial (R$)' : 'Limite mensal inicial (R$)' }}</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.01"
+              name="convertInitialValue"
+              [ngModel]="convertInitialValue()"
+              (ngModelChange)="convertInitialValue.set($event)"
+            />
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit">Confirmar conversão</button>
+          <button mat-button type="button" (click)="showConvertForm.set(false)">Cancelar</button>
+        </form>
+      }
+    </div>
+
+    @if (actionError()) {
+      <p class="error-message">{{ actionError() }}</p>
+    }
+  }
+
+  <section class="dashboard">
+    <h2 class="display">Dashboard</h2>
+    @if (!hasDashboardData()) {
+      <p class="empty-note">Envie mensagens pra ver estatísticas de uso aqui.</p>
+    } @else {
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <span class="kpi-label">Total gasto</span>
+          <span class="kpi-value mono">R$ {{ totalSpent() | number: '1.2-2' }}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Mensagens enviadas</span>
+          <span class="kpi-value mono">{{ messageCount() }}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Custo médio</span>
+          <span class="kpi-value mono">R$ {{ averageCost() | number: '1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <span class="chart-title">Gasto por dia</span>
+          @if (spendChartBars().length === 0) {
+            <p class="empty-note small">Sem mensagens cobradas ainda.</p>
+          } @else {
+            <svg class="spend-chart" viewBox="0 0 320 130" preserveAspectRatio="none" role="img" aria-label="Gasto por dia">
+              @for (bar of spendChartBars(); track bar.label) {
+                <rect
+                  [attr.x]="bar.x"
+                  [attr.y]="bar.y"
+                  [attr.width]="bar.width"
+                  [attr.height]="bar.height"
+                  rx="2"
+                  class="spend-bar"
+                >
+                  <title>{{ bar.label }}: R$ {{ bar.amount | number: '1.2-2' }}</title>
+                </rect>
+                <text [attr.x]="bar.x + bar.width / 2" y="126" class="spend-bar-label" text-anchor="middle">
+                  {{ bar.label }}
+                </text>
+              }
+            </svg>
+          }
+        </div>
+
+        <div class="chart-card">
+          <span class="chart-title">Normal × Urgente</span>
+          @if (priorityDonut().normalCount + priorityDonut().urgentCount === 0) {
+            <p class="empty-note small">Sem mensagens cobradas ainda.</p>
+          } @else {
+            <div class="donut-wrap">
+              <svg class="priority-donut" viewBox="0 0 110 110" role="img" aria-label="Distribuição normal e urgente">
+                <circle cx="55" cy="55" r="45" class="donut-track" />
+                <circle
+                  cx="55"
+                  cy="55"
+                  r="45"
+                  class="donut-segment normal"
+                  [attr.stroke-dasharray]="priorityDonut().normalLength + ' ' + priorityDonut().circumference"
+                  stroke-dashoffset="0"
+                />
+                <circle
+                  cx="55"
+                  cy="55"
+                  r="45"
+                  class="donut-segment urgent"
+                  [attr.stroke-dasharray]="priorityDonut().urgentLength + ' ' + priorityDonut().circumference"
+                  [attr.stroke-dashoffset]="-priorityDonut().normalLength"
+                />
+              </svg>
+              <div class="donut-legend">
+                <span class="legend-item"><i class="dot normal"></i>Normal — {{ priorityDonut().normalPct }}% ({{ priorityDonut().normalCount }})</span>
+                <span class="legend-item"><i class="dot urgent"></i>Urgente — {{ priorityDonut().urgentPct }}% ({{ priorityDonut().urgentCount }})</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <section class="transactions">
+    <h2 class="display">Histórico</h2>
+    @switch (accountService.state()) {
+      @case ('loading') {
+        <mat-spinner diameter="28" />
+      }
+      @case ('error') {
+        <p>Não foi possível carregar o histórico.</p>
+        <button mat-stroked-button type="button" (click)="accountService.loadTransactions()">Tentar de novo</button>
+      }
+      @default {
+        @if (accountService.transactions().length === 0) {
+          <p class="empty-note">Nenhuma transação ainda.</p>
+        } @else {
+          <ul class="transaction-list">
+            @for (t of accountService.transactions(); track t.id) {
+              <li>
+                <span class="badge" [class.credit]="t.type === 'CREDIT'" [class.debit]="t.type === 'DEBIT'">
+                  {{ t.type === 'CREDIT' ? 'crédito' : 'débito' }}
+                </span>
+                <span class="mono">R$ {{ t.amount | number: '1.2-2' }}</span>
+                <span class="mono timestamp">{{ t.timestamp | date: 'dd/MM HH:mm' }}</span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </section>
+</div>

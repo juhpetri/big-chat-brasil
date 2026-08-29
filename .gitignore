@@ -33,3 +33,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Node (orquestração raiz) ###
+node_modules/
+
+### Claude Code (config local, não é parte do entregável) ###
+.claude/

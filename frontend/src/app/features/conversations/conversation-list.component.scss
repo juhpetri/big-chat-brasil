@@ -1,0 +1,104 @@
+.conversations-page {
+  // Antes era página cheia própria (min-height: 100dvh); agora vive dentro do
+  // painel esquerdo do shell (TASK-17), que já controla a altura de 100dvh.
+  height: 100%;
+  background: var(--bcb-black);
+  color: var(--bcb-white);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--bcb-line);
+}
+
+.brand-name {
+  font-weight: 800;
+  color: var(--bcb-yellow);
+  font-size: 1.1rem;
+}
+
+.account-link {
+  color: var(--bcb-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+.account-link:hover {
+  color: var(--bcb-white);
+}
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 1rem;
+  color: var(--bcb-muted);
+  text-align: center;
+}
+
+.conversation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.conversation-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--bcb-line);
+  color: var(--bcb-white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.conversation-item:hover {
+  background: var(--bcb-panel);
+}
+
+.conversation-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.recipient-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timestamp {
+  font-family: var(--bcb-font-mono);
+  font-size: 0.75rem;
+  color: var(--bcb-muted);
+}
+
+.unread-badge {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  background: var(--bcb-yellow);
+  color: var(--bcb-black);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0 6px;
+}

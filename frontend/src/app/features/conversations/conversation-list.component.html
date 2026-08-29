@@ -1,0 +1,46 @@
+<div class="conversations-page">
+  <header class="page-header">
+    <span class="display brand-name">BCB</span>
+    <a routerLink="/account" class="account-link">Minha conta</a>
+  </header>
+
+  @switch (conversationsService.state()) {
+    @case ('loading') {
+      <div class="state-box">
+        <mat-spinner diameter="32" />
+        <p>Carregando conversas…</p>
+      </div>
+    }
+    @case ('error') {
+      <div class="state-box">
+        <p>Não foi possível carregar suas conversas.</p>
+        <button mat-stroked-button type="button" (click)="retry()">Tentar de novo</button>
+      </div>
+    }
+    @default {
+      @if (conversationsService.conversations().length === 0) {
+        <div class="state-box">
+          <p>Nenhuma conversa ainda.</p>
+        </div>
+      } @else {
+        <ul class="conversation-list">
+          @for (conversation of conversationsService.conversations(); track conversation.id) {
+            <li>
+              <button type="button" class="conversation-item" (click)="open(conversation.id)">
+                <div class="conversation-main">
+                  <span class="recipient-name">{{ conversation.recipientName }}</span>
+                  @if (conversation.lastMessageAt) {
+                    <span class="timestamp">{{ conversation.lastMessageAt | date: 'HH:mm' }}</span>
+                  }
+                </div>
+                @if (conversation.unreadCount > 0) {
+                  <span class="unread-badge">{{ conversation.unreadCount }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</div>

@@ -1,0 +1,35 @@
+.status-badge {
+  font-family: var(--bcb-font-mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.status-queued,
+.status-processing {
+  background: rgba(154, 154, 154, 0.14);
+  color: var(--bcb-muted);
+  border: 1px solid var(--bcb-line);
+}
+
+.status-sent {
+  background: rgba(245, 209, 48, 0.14);
+  color: var(--bcb-yellow);
+  border: 1px solid var(--bcb-yellow-deep);
+}
+
+.status-delivered,
+.status-read {
+  background: var(--bcb-yellow);
+  color: var(--bcb-black);
+  border: 1px solid var(--bcb-yellow-deep);
+}
+
+.status-failed {
+  background: rgba(255, 92, 77, 0.16);
+  color: var(--bcb-urgent);
+  border: 1px solid var(--bcb-urgent-dim);
+}

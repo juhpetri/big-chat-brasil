@@ -1,0 +1,268 @@
+.account-page {
+  min-height: 100dvh;
+  background: var(--bcb-black);
+  color: var(--bcb-white);
+  padding-bottom: 3rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--bcb-line);
+}
+
+.back-link {
+  color: var(--bcb-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.back-link:hover {
+  color: var(--bcb-white);
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.summary-card {
+  margin: 1.5rem;
+  background: var(--bcb-panel);
+  border: 1px solid var(--bcb-line);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.summary-row .label {
+  color: var(--bcb-muted);
+  font-size: 0.85rem;
+}
+
+.summary-row .value {
+  color: var(--bcb-yellow);
+  font-weight: 700;
+}
+
+.action-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 1.5rem 1rem;
+  flex-wrap: wrap;
+}
+
+.convert-block {
+  margin: 0 1.5rem 1rem;
+}
+
+.error-message {
+  color: var(--bcb-urgent);
+  font-size: 0.85rem;
+  margin: 0 1.5rem 1rem;
+}
+
+.transactions,
+.dashboard {
+  margin: 2rem 1.5rem 0;
+}
+
+.transactions h2,
+.dashboard h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+.empty-note {
+  color: var(--bcb-muted);
+  font-size: 0.9rem;
+}
+
+.empty-note.small {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bcb-panel);
+  border: 1px solid var(--bcb-line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.kpi-label {
+  color: var(--bcb-muted);
+  font-size: 0.75rem;
+}
+
+.kpi-value {
+  color: var(--bcb-yellow);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .chart-row {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+
+.chart-card {
+  background: var(--bcb-panel);
+  border: 1px solid var(--bcb-line);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.chart-title {
+  display: block;
+  color: var(--bcb-muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.spend-chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.spend-bar {
+  fill: var(--bcb-yellow);
+}
+
+.spend-bar-label {
+  fill: var(--bcb-muted);
+  font-size: 7px;
+  font-family: var(--bcb-font-mono);
+}
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.priority-donut {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.donut-track {
+  fill: none;
+  stroke: var(--bcb-line);
+  stroke-width: 12;
+}
+
+.donut-segment {
+  fill: none;
+  stroke-width: 12;
+  transform: rotate(-90deg);
+  transform-origin: 55px 55px;
+  stroke-linecap: butt;
+}
+
+.donut-segment.normal {
+  stroke: var(--bcb-yellow);
+}
+
+.donut-segment.urgent {
+  stroke: var(--bcb-urgent);
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--bcb-white);
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.normal {
+  background: var(--bcb-yellow);
+}
+
+.dot.urgent {
+  background: var(--bcb-urgent);
+}
+
+.transaction-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.transaction-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--bcb-line);
+}
+
+.badge {
+  font-family: var(--bcb-font-mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.badge.credit {
+  background: rgba(245, 209, 48, 0.14);
+  color: var(--bcb-yellow);
+  border: 1px solid var(--bcb-yellow-deep);
+}
+
+.badge.debit {
+  background: rgba(255, 92, 77, 0.16);
+  color: var(--bcb-urgent);
+  border: 1px solid var(--bcb-urgent-dim);
+}
+
+.timestamp {
+  margin-left: auto;
+  color: var(--bcb-muted);
+  font-size: 0.75rem;
+}

@@ -1,0 +1,133 @@
+.chat-page {
+  // Antes era página cheia própria (height: 100dvh); agora vive dentro do
+  // painel direito do shell (TASK-17), que já controla a altura de 100dvh.
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bcb-black);
+  color: var(--bcb-white);
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--bcb-line);
+  flex-shrink: 0;
+}
+
+.back-link {
+  color: var(--bcb-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.search-bar {
+  padding: 0.5rem 1.5rem 0;
+  flex-shrink: 0;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.back-link:hover {
+  color: var(--bcb-white);
+}
+
+.recipient-name {
+  font-weight: 600;
+}
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  color: var(--bcb-muted);
+  text-align: center;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.msg {
+  max-width: 80%;
+  align-self: flex-end;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border-bottom-right-radius: 4px;
+  background: var(--bcb-panel-2);
+  border: 1px solid var(--bcb-line);
+  font-size: 14px;
+}
+
+.msg.pending {
+  opacity: 0.6;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  font-family: var(--bcb-font-mono);
+  font-size: 10px;
+  color: var(--bcb-muted);
+}
+
+.badge {
+  font-family: var(--bcb-font-mono);
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.badge.normal {
+  background: rgba(245, 209, 48, 0.14);
+  color: var(--bcb-yellow);
+  border: 1px solid var(--bcb-yellow-deep);
+}
+
+.badge.urgent {
+  background: rgba(255, 92, 77, 0.16);
+  color: var(--bcb-urgent);
+  border: 1px solid var(--bcb-urgent-dim);
+}
+
+.send-error {
+  color: var(--bcb-urgent);
+  font-size: 0.85rem;
+  padding: 0 1.5rem;
+  margin: 0 0 0.5rem;
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--bcb-line);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.draft-field {
+  flex: 1;
+  min-width: 200px;
+}

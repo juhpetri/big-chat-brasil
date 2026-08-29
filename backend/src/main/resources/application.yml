@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: big-chat-brasil-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bcb}
+    username: ${SPRING_DATASOURCE_USERNAME:bcb}
+    password: ${SPRING_DATASOURCE_PASSWORD:bcb}
+
+  jpa:
+    hibernate:
+      # O schema é criado/versionado pelo Liquibase (db/changelog) — Hibernate só confere que as
+      # entidades batem com o que já existe no banco, nunca altera nada sozinho.
+      ddl-auto: validate
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG

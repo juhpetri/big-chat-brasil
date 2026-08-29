@@ -1,0 +1,13 @@
+{
+  "name": "big-chat-brasil",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -n BACKEND,FRONTEND -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "mvn -f backend spring-boot:run",
+    "dev:frontend": "npm --prefix frontend start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

@@ -1,0 +1,48 @@
+.shell {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  height: 100dvh;
+  background: var(--bcb-black);
+}
+
+.list-panel {
+  overflow-y: auto;
+  border-right: 1px solid var(--bcb-line);
+}
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.empty-chat-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bcb-muted);
+  padding: 2rem;
+  text-align: center;
+}
+
+// Mobile: uma coluna só — lista OU chat, nunca os dois ao mesmo tempo.
+// O chat some por padrão; quando uma conversa é aberta (.chat-open, vindo do
+// (activate)/(deactivate) do router-outlet), invertemos qual painel aparece.
+@media (max-width: 820px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-panel {
+    display: none;
+  }
+
+  .shell.chat-open .list-panel {
+    display: none;
+  }
+
+  .shell.chat-open .chat-panel {
+    display: flex;
+  }
+}

@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -13,16 +14,18 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Em dev, `ng serve` usa proxy.conf.json (Vite) pra redirecionar /api -> backend.
+ * Esse mecanismo não existe fora do dev-server, então precisamos do equivalente aqui:
+ * sem isso, em produção/Docker, todo fetch('/api/...') do browser bateria neste
+ * próprio servidor Express (que não tem rota nenhuma pra /api) em vez do backend Spring.
  */
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: process.env['BACKEND_URL'] || 'http://localhost:8080',
+    changeOrigin: true,
+  }),
+);
 
 /**
  * Serve static files from /browser

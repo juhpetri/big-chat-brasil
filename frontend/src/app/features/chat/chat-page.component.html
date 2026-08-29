@@ -1,0 +1,94 @@
+<div class="chat-page">
+  <header class="chat-header">
+    <a routerLink="/conversations" class="back-link">← Conversas</a>
+    <span class="recipient-name">{{ conversation()?.recipientName ?? 'Conversa' }}</span>
+  </header>
+
+  @if (chatService.messages().length > 0) {
+    <div class="search-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar no histórico</mat-label>
+        <input
+          matInput
+          name="searchQuery"
+          autocomplete="off"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </mat-form-field>
+    </div>
+  }
+
+  <div class="chat-body">
+    @switch (chatService.historyState()) {
+      @case ('loading') {
+        <div class="state-box">
+          <mat-spinner diameter="32" />
+        </div>
+      }
+      @case ('error') {
+        <div class="state-box">
+          <p>Não foi possível carregar o histórico.</p>
+          <button mat-stroked-button type="button" (click)="reloadHistory()">Tentar de novo</button>
+        </div>
+      }
+      @default {
+        @if (chatService.messages().length === 0) {
+          <div class="state-box">
+            <p>Nenhuma mensagem ainda — comece a conversa abaixo.</p>
+          </div>
+        } @else if (filteredMessages().length === 0) {
+          <div class="state-box">
+            <p>Nenhuma mensagem encontrada pra "{{ searchQuery() }}".</p>
+          </div>
+        } @else {
+          <div class="messages">
+            @for (message of filteredMessages(); track message.id) {
+              <div class="msg" [class.pending]="message.status === 'QUEUED'">
+                {{ message.content }}
+                <div class="meta">
+                  <span class="badge" [class.normal]="message.priority === 'NORMAL'" [class.urgent]="message.priority === 'URGENT'">
+                    {{ message.priority === 'URGENT' ? 'urgente' : 'normal' }}
+                  </span>
+                  <span class="mono">R$ {{ message.cost | number: '1.2-2' }}</span>
+                  <app-message-status-badge [status]="message.status" />
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+  </div>
+
+  @if (sendError()) {
+    <p class="send-error">{{ sendError() }}</p>
+  }
+
+  <form class="composer" (ngSubmit)="submit()">
+    <mat-button-toggle-group [value]="priority()" (change)="priority.set($event.value)" aria-label="Prioridade">
+      <mat-button-toggle value="NORMAL">Normal · R$0,25</mat-button-toggle>
+      <mat-button-toggle value="URGENT">Urgente · R$0,50</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <mat-form-field appearance="outline" class="draft-field">
+      <input
+        matInput
+        name="draft"
+        placeholder="Escreva uma mensagem…"
+        autocomplete="off"
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+      />
+    </mat-form-field>
+
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="draft().trim().length === 0 || !conversation()"
+    >
+      Enviar · R$ {{ cost() | number: '1.2-2' }}
+    </button>
+  </form>
+</div>
