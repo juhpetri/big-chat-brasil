@@ -21,6 +21,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bcb
       SPRING_DATASOURCE_USERNAME: bcb
       SPRING_DATASOURCE_PASSWORD: bcb
+      SPRING_PROFILES_ACTIVE: seed
     depends_on:
       postgres:
         condition: service_healthy
@@ -32,6 +33,13 @@ services:
       context: ./frontend
     environment:
       BACKEND_URL: http://backend:8080
+      # O Angular SSR valida o header Host pra evitar SSRF. Em Codespaces/dev containers
+      # o request chega com Host reescrito (ex.: localhost:4200) via proxy de porta, então
+      # sem isso o server rejeita tudo com "Bad Request". NG_ALLOWED_HOSTS=* libera geral
+      # (ambiente de dev local); NG_TRUST_PROXY_HEADERS confia nos headers X-Forwarded-*
+      # que o proxy do Codespaces injeta.
+      NG_ALLOWED_HOSTS: "*"
+      NG_TRUST_PROXY_HEADERS: "x-forwarded-for,x-forwarded-host,x-forwarded-port,x-forwarded-proto,x-forwarded-scheme,forwarded"
     depends_on:
       - backend
     ports:
