@@ -1,5 +1,10 @@
 server:
   port: 8080
+  # Sem isso, o Spring ignora os headers X-Forwarded-* que o proxy de portas do Codespaces (ou
+  # qualquer reverse proxy) envia — daí o springdoc detecta a URL do servidor como
+  # http://localhost:8080 (o host interno do container) em vez da URL pública, e o "Try it out"
+  # do Swagger UI tenta bater num endereço que não existe do lado de fora.
+  forward-headers-strategy: framework
 
 spring:
   application:

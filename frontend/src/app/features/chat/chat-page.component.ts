@@ -10,6 +10,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -17,6 +18,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 import { ChatService } from '../../core/chat.service';
 import { MessagePriority, MessageResponse, MessageStatus, SendMessageRequest } from '../../core/chat.models';
 import { ConversationsService } from '../../core/conversations.service';
@@ -49,10 +51,17 @@ export class ChatPageComponent {
   protected readonly chatService = inject(ChatService);
   protected readonly conversationsService = inject(ConversationsService);
 
-  protected readonly conversationId = this.route.snapshot.paramMap.get('id')!;
+  // Reativo (não snapshot): o Router reaproveita a mesma instância de ChatPageComponent ao
+  // navegar entre /conversations/:id1 e /conversations/:id2 (rotas irmãs), então um snapshot
+  // capturado só na construção nunca atualizava — o histórico ficava travado na primeira
+  // conversa aberta.
+  protected readonly conversationId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id')!)),
+    { requireSync: true },
+  );
 
   protected readonly conversation = computed(
-    () => this.conversationsService.conversations().find((c) => c.id === this.conversationId) ?? null,
+    () => this.conversationsService.conversations().find((c) => c.id === this.conversationId()) ?? null,
   );
 
   protected readonly draft = signal('');
@@ -73,6 +82,9 @@ export class ChatPageComponent {
   });
 
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
+  // undefined só até a primeira execução do effect abaixo — distingue "carga inicial" (sem
+  // polling/busca antigos pra limpar) de uma troca de conversa de verdade.
+  private previousConversationId: string | undefined;
 
   constructor() {
     // Roda só no browser: evita chamada HTTP durante SSR/prerender (mesmo padrão do resto do app).
@@ -80,7 +92,23 @@ export class ChatPageComponent {
       if (this.conversationsService.conversations().length === 0) {
         this.conversationsService.load();
       }
-      this.chatService.loadHistory(this.conversationId);
+    });
+
+    // Carrega o histórico da conversa atual e recarrega toda vez que conversationId muda. Isso
+    // cobre tanto a carga inicial quanto a troca de conversa — o Router reaproveita a mesma
+    // instância de ChatPageComponent ao navegar entre /conversations/:id1 e /conversations/:id2
+    // (rotas irmãs), então sem reagir à mudança de parâmetro o histórico ficava travado na
+    // primeira conversa aberta.
+    effect(() => {
+      const id = this.conversationId();
+      const isConversationSwitch = this.previousConversationId !== undefined;
+      this.previousConversationId = id;
+
+      if (isConversationSwitch) {
+        this.clearPoll();
+        this.searchQuery.set('');
+      }
+      this.chatService.loadHistory(id);
     });
 
     // Reage a toda mudança na lista de mensagens (carga inicial, envio otimista, resultado do polling).
@@ -102,7 +130,7 @@ export class ChatPageComponent {
   private schedulePoll(): void {
     this.pollTimer = setTimeout(() => {
       this.pollTimer = null;
-      this.chatService.loadHistory(this.conversationId);
+      this.chatService.loadHistory(this.conversationId());
     }, POLL_INTERVAL_MS);
   }
 
@@ -114,7 +142,7 @@ export class ChatPageComponent {
   }
 
   protected reloadHistory(): void {
-    this.chatService.loadHistory(this.conversationId);
+    this.chatService.loadHistory(this.conversationId());
   }
 
   protected submit(): void {
