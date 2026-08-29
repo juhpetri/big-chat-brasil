@@ -10,6 +10,9 @@ import com.bcb.domain.SenderType;
 import com.bcb.message.dto.MessageResponse;
 import com.bcb.message.dto.SendMessageRequest;
 import com.bcb.message.dto.SendMessageResponse;
+import com.bcb.message.exceptions.InvalidMessageStatusTargetException;
+import com.bcb.message.exceptions.InvalidMessageStatusTransitionException;
+import com.bcb.message.exceptions.MessageNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +30,13 @@ import java.util.stream.Collectors;
 public class MessageService {
 
     private static final int ESTIMATED_DELIVERY_SECONDS = 3;
+
+    // Únicas transições que essa API expõe: SENT -> DELIVERED -> READ (ou direto SENT -> READ).
+    // QUEUED/PROCESSING/SENT/FAILED continuam só sob controle do MessageQueueWorker.
+    private static final Map<MessageStatus, Set<MessageStatus>> ALLOWED_STATUS_TRANSITIONS = Map.of(
+            MessageStatus.DELIVERED, Set.of(MessageStatus.SENT),
+            MessageStatus.READ, Set.of(MessageStatus.SENT, MessageStatus.DELIVERED)
+    );
 
     private final MessageRepository messageRepository;
     private final ClientService clientService;
@@ -49,6 +60,26 @@ public class MessageService {
         return messageRepository.findByConversation_IdOrderByQueuedAtAsc(conversationId).stream()
                 .map(Message::toMessageResponse)
                 .toList();
+    }
+
+    @Transactional
+    public MessageResponse updateStatus(UUID clientId, UUID messageId, MessageStatus newStatus) {
+        Set<MessageStatus> validFromStatuses = ALLOWED_STATUS_TRANSITIONS.get(newStatus);
+        if (validFromStatuses == null) {
+            throw new InvalidMessageStatusTargetException(newStatus);
+        }
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
+
+        conversationService.assertOwnership(clientId, message.getConversation().getId());
+
+        if (!validFromStatuses.contains(message.getStatus())) {
+            throw new InvalidMessageStatusTransitionException(message.getStatus(), newStatus);
+        }
+
+        message.setStatus(newStatus);
+        return messageRepository.save(message).toMessageResponse();
     }
 
     public Map<UUID, Long> countUnreadGroupedByConversation(List<UUID> conversationIds) {
