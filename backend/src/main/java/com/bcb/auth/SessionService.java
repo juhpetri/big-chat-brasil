@@ -4,6 +4,7 @@ import com.bcb.auth.dto.SessionDto;
 import com.bcb.client.dto.ClientResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -21,6 +22,7 @@ public class SessionService {
         sessionRepository.save(session);
     }
 
+    @Transactional(readOnly = true)
     public Optional<SessionDto> findByToken(String token) {
         return sessionRepository.findByToken(token).map(session -> {
             return SessionDto.builder()
