@@ -24,6 +24,10 @@ app.use(
   createProxyMiddleware({
     target: process.env['BACKEND_URL'] || 'http://localhost:8080',
     changeOrigin: true,
+    // O Express tira o prefixo do mount path (`/api`) de req.url antes de passar pro
+    // middleware, e o http-proxy-middleware usa esse url já sem prefixo — sem isso o
+    // backend recebe POST /auth em vez de POST /api/auth e rejeita como não-autenticado.
+    pathRewrite: (path) => `/api${path}`,
   }),
 );
 
