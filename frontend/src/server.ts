@@ -28,6 +28,15 @@ app.use(
     // middleware, e o http-proxy-middleware usa esse url já sem prefixo — sem isso o
     // backend recebe POST /auth em vez de POST /api/auth e rejeita como não-autenticado.
     pathRewrite: (path) => `/api${path}`,
+    on: {
+      proxyReq: (proxyReq) => {
+        // O browser manda Origin (ex.: a URL pública do Codespace) mesmo numa chamada
+        // same-origin como essa. Esse hop é servidor-a-servidor dentro da rede do Docker,
+        // não uma chamada cross-origin de verdade — sem remover o header, o filtro de CORS
+        // do backend (que só libera http://localhost:4200) rejeita com "Invalid CORS request".
+        proxyReq.removeHeader('origin');
+      },
+    },
   }),
 );
 
