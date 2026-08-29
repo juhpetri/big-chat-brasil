@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { PlanType } from '../../core/auth.models';
 import { AuthService } from '../../core/auth.service';
 import { AccountService } from '../../core/account.service';
@@ -30,6 +30,7 @@ import { AccountService } from '../../core/account.service';
 })
 export class AccountPageComponent {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   protected readonly accountService = inject(AccountService);
 
   protected readonly client = this.authService.currentClient;
@@ -162,6 +163,11 @@ export class AccountPageComponent {
       },
       error: (err: HttpErrorResponse) => this.actionError.set(this.messageFor(err)),
     });
+  }
+
+  protected logout(): void {
+    this.authService.logout();
+    this.router.navigateByUrl('/login');
   }
 
   private messageFor(err: HttpErrorResponse): string {

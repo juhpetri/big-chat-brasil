@@ -2,6 +2,7 @@
   <header class="page-header">
     <a routerLink="/conversations" class="back-link">← Conversas</a>
     <span class="display brand-name">Minha conta</span>
+    <button mat-stroked-button type="button" class="logout-button" (click)="logout()">Sair</button>
   </header>
 
   @if (client(); as c) {
