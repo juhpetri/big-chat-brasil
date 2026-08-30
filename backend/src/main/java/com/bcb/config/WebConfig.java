@@ -6,9 +6,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Libera CORS pra chamar a API direto do browser sem passar pelo proxy do servidor Express
- * (ng serve com proxy.conf.json desligado, ou o "Try it out" do Swagger UI). Usa
- * allowedOriginPatterns (não allowedOrigins) porque o domínio público do Codespaces é dinâmico
- * por sessão (ex.: https://<nome-aleatório>-8080.app.github.dev) — não dá pra fixar um valor só.
+ * (ng serve com proxy.conf.json desligado, ou o "Try it out" do Swagger UI). Uma allowlist de
+ * padrões de domínio (ex.: *.app.github.dev) se mostrou frágil na prática pra encaminhamento de
+ * porta do Codespaces — libera geral em vez disso. Isso é seguro aqui porque a autenticação é
+ * via Bearer token explícito por request (ver AuthTokenFilter), não cookie de sessão: não tem
+ * credencial ambiente pro browser vazar automaticamente pra origem nenhuma.
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -16,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOriginPatterns("http://localhost:4200", "https://*.app.github.dev", "https://*.github.dev")
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
     }
 }
