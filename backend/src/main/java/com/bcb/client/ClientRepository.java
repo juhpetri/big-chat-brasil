@@ -17,8 +17,6 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
 
     Optional<Client> findByDocumentId(DocumentId documentId);
 
-    // Lock pessimista: serializa débitos concorrentes no saldo/uso do mesmo cliente
-    // (SELECT ... FOR UPDATE), evitando lost update entre chargeForMessage concorrentes.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Client c where c.id = :id")
     Optional<Client> findByIdForUpdate(@Param("id") UUID id);

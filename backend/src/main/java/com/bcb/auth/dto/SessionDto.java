@@ -9,6 +9,5 @@ import lombok.Data;
 public class SessionDto {
 
     private String token;
-
     private ClientResponse client;
 }

@@ -1,11 +1,10 @@
 package com.bcb.client.exceptions;
 
-import com.bcb.common.ApiException;
-import org.springframework.http.HttpStatus;
+import com.bcb.common.DomainException;
 
-public class InvalidPlanOperationException extends ApiException {
+public class InvalidPlanOperationException extends DomainException {
 
     public InvalidPlanOperationException(String message) {
-        super(message, HttpStatus.BAD_REQUEST);
+        super(message);
     }
 }

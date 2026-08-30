@@ -62,8 +62,6 @@ public class ConversationService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new ConversationNotFoundException(conversationId));
 
-        // getClient() aqui não dispara SELECT extra: é um proxy lazy, e Hibernate resolve o id
-        // do proxy sem inicializá-lo.
         if (!conversation.getClient().getId().equals(clientId)) {
             throw new ConversationNotFoundException(conversationId);
         }

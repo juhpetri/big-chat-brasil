@@ -13,9 +13,6 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class MessageQueueWorker {
 
-    // Tentativas antes de desistir e marcar FAILED. Sem backoff: a mensagem volta pra fila com o
-    // mesmo queuedAt, então é reprocessada no próximo tick (3s) — suficiente pra falha transitória
-    // de conexão com o banco; não tenta resolver falha permanente (mensagem inválida, etc.).
     private static final int MAX_ATTEMPTS = 3;
 
     private final MessageQueueService messageQueueService;

@@ -1,12 +1,10 @@
 package com.bcb.client.exceptions;
 
-import com.bcb.common.ApiException;
-import com.bcb.domain.DocumentType;
-import org.springframework.http.HttpStatus;
+import com.bcb.common.DomainException;
 
-public class InvalidDocumentFormatException extends ApiException {
+public class InvalidDocumentFormatException extends DomainException {
 
     public InvalidDocumentFormatException(String document) {
-        super(String.format("Documento inválido: %s", document), HttpStatus.BAD_REQUEST);
+        super(String.format("Documento inválido: %s", document));
     }
 }

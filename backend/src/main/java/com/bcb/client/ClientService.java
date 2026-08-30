@@ -5,7 +5,6 @@ import com.bcb.client.dto.ClientResponse;
 import com.bcb.client.dto.CreateClientRequest;
 import com.bcb.client.exceptions.ClientNotFoundException;
 import com.bcb.client.exceptions.DocumentAlreadyExistsException;
-import com.bcb.client.exceptions.InvalidPlanOperationException;
 import com.bcb.domain.MessagePriority;
 import com.bcb.domain.PlanType;
 import com.bcb.domain.TransactionType;
@@ -62,7 +61,7 @@ public class ClientService {
 
         Client chargedClient = clientRepository.save(client);
         transactionService.record(clientId, null, TransactionType.DEBIT, priority.getCost(),
-                "Envio de mensagem " + priorityLabel(priority));
+                "Envio de mensagem " + priority.getPriorityLabel());
         return chargedClient.toClientResponse();
     }
 
@@ -71,9 +70,7 @@ public class ClientService {
         Client client = clientRepository.findByIdForUpdate(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        if (client.getPlanType() != PlanType.PREPAID) {
-            throw new InvalidPlanOperationException("Só é possível adicionar crédito a clientes PREPAID.");
-        }
+        client.checkIsPrepaid();
 
         client.setBalance(client.getBalance().add(amount));
         Client saved = clientRepository.save(client);
@@ -86,9 +83,7 @@ public class ClientService {
         Client client = clientRepository.findByIdForUpdate(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        if (client.getPlanType() != PlanType.POSTPAID) {
-            throw new InvalidPlanOperationException("Só é possível ajustar limite de clientes POSTPAID.");
-        }
+        client.checkIsPostpaid();
 
         client.setMonthlyLimit(newLimit);
         Client saved = clientRepository.save(client);
@@ -100,40 +95,14 @@ public class ClientService {
         Client client = clientRepository.findByIdForUpdate(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
-        if (client.getPlanType() == newPlanType) {
-            throw new InvalidPlanOperationException("Cliente já está no plano " + newPlanType + ".");
-        }
+        client.checkAlreadyPlanType(newPlanType);
 
-        BigDecimal residual = client.getPlanType() == PlanType.PREPAID
-                ? client.getBalance()
-                : client.getMonthlyLimit().subtract(client.getMonthlyUsage());
-        transactionService.record(clientId, null, TransactionType.CREDIT, residual,
-                "Conversão de plano para " + planLabel(newPlanType));
-
-        client.setPlanType(newPlanType);
-        if (newPlanType == PlanType.PREPAID) {
-            client.setBalance(initialValue);
-            client.setMonthlyLimit(null);
-            client.setMonthlyUsage(null);
-        } else {
-            client.setMonthlyLimit(initialValue);
-            client.setMonthlyUsage(BigDecimal.ZERO);
-            client.setBalance(null);
-        }
+        transactionService.record(clientId, null, TransactionType.CREDIT, client.getResidualValue(),
+                "Conversão de plano para " + newPlanType.getDescription());
+        client.convertToPlanType(initialValue, newPlanType);
 
         Client saved = clientRepository.save(client);
         return saved.toClientResponse();
-    }
-
-    private String priorityLabel(MessagePriority priority) {
-        return switch (priority) {
-            case NORMAL -> "normal";
-            case URGENT -> "urgente";
-        };
-    }
-
-    private String planLabel(PlanType planType) {
-        return planType == PlanType.PREPAID ? "pré-pago" : "pós-pago";
     }
 
     private void validateClientExistent(DocumentId documentId) {

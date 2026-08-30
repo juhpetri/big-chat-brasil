@@ -16,6 +16,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(apiException.getStatus()).body(errorResponse);
     }
 
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponse> handle(DomainException domainException) {
+        ErrorResponse errorResponse = new ErrorResponse(domainException.getClass().getSimpleName(), domainException.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception) {
         log.error("Erro inesperado não tratado", exception);

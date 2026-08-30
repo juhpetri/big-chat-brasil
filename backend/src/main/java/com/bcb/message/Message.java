@@ -58,4 +58,9 @@ public class Message {
         return new MessageResponse(id, content, priority,
                 status, cost, sentByType, queuedAt, processedAt);
     }
+
+    public void updateStatus(MessageStatus newStatus) {
+        newStatus.checkTransitionFrom(status);
+        status = newStatus;
+    }
 }

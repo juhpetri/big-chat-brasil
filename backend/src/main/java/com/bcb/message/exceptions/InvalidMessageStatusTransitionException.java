@@ -1,13 +1,11 @@
 package com.bcb.message.exceptions;
 
-import com.bcb.common.ApiException;
+import com.bcb.common.DomainException;
 import com.bcb.domain.MessageStatus;
-import org.springframework.http.HttpStatus;
 
-public class InvalidMessageStatusTransitionException extends ApiException {
+public class InvalidMessageStatusTransitionException extends DomainException {
 
     public InvalidMessageStatusTransitionException(MessageStatus from, MessageStatus to) {
-        super(String.format("Não é possível marcar como %s uma mensagem com status %s.", to, from),
-                HttpStatus.BAD_REQUEST);
+        super(String.format("Não é possível marcar como %s uma mensagem com status %s.", to, from));
     }
 }

@@ -24,8 +24,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-// Só roda com --spring.profiles.active=seed (ou SPRING_PROFILES_ACTIVE=seed). Idempotente:
-// se já existe cliente no banco, não faz nada — não duplica em restart.
 @Slf4j
 @Component
 @Profile("seed")
