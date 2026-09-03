@@ -119,7 +119,10 @@ export class AccountPageComponent {
   });
 
   constructor() {
-    afterNextRender(() => this.accountService.loadTransactions());
+    afterNextRender(() => {
+      this.accountService.refreshClient();
+      this.accountService.loadTransactions();
+    });
   }
 
   protected submitCredit(): void {

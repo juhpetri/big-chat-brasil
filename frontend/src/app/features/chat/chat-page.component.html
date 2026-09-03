@@ -19,7 +19,7 @@
     </div>
   }
 
-  <div class="chat-body">
+  <div class="chat-body" #chatBody>
     @switch (chatService.historyState()) {
       @case ('loading') {
         <div class="state-box">

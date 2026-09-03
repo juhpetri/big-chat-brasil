@@ -1,10 +1,12 @@
 package com.bcb.client;
 
+import com.bcb.auth.AuthenticatedClient;
 import com.bcb.client.dto.AddCreditRequest;
 import com.bcb.client.dto.AdjustLimitRequest;
 import com.bcb.client.dto.ClientResponse;
 import com.bcb.client.dto.ConvertPlanRequest;
 import com.bcb.client.dto.CreateClientRequest;
+import com.bcb.client.exceptions.ClientNotFoundException;
 import com.bcb.common.ErrorResponse;
 import com.bcb.transaction.TransactionService;
 import com.bcb.transaction.dto.TransactionResponse;
@@ -33,6 +35,7 @@ public class ClientController {
 
     private final ClientService clientService;
     private final TransactionService transactionService;
+    private final AuthenticatedClient authenticatedClient;
 
     @Operation(summary = "Cadastrar cliente",
             description = "Cria um cliente PREPAID (com saldo inicial) ou POSTPAID (com limite mensal inicial). "
@@ -52,19 +55,20 @@ public class ClientController {
         return clientService.createClient(clientRequest);
     }
 
-    @Operation(summary = "Buscar cliente por id")
+    @Operation(summary = "Buscar cliente por id", description = "Só o próprio cliente autenticado pode consultar seus dados.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Cliente encontrado",
                     content = @Content(schema = @Schema(implementation = ClientResponse.class))),
             @ApiResponse(responseCode = "401", description = "Token ausente ou inválido",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Cliente não encontrado",
+            @ApiResponse(responseCode = "404", description = "Cliente não encontrado, ou id não pertence ao cliente autenticado",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ClientResponse getClientById(@Parameter(description = "Id do cliente") @PathVariable String id) {
-        return clientService.getClientById(UUID.fromString(id));
+    public ClientResponse getClientById(@Parameter(description = "Id do cliente") @PathVariable UUID id) {
+        assertSelf(id);
+        return clientService.getClientById(id);
     }
 
     @Operation(summary = "Adicionar crédito", description = "Soma o valor informado ao saldo do cliente. Só válido para clientes PREPAID.")
@@ -82,6 +86,7 @@ public class ClientController {
     @ResponseStatus(HttpStatus.OK)
     public ClientResponse addCredit(@Parameter(description = "Id do cliente") @PathVariable UUID id,
                                      @Valid @RequestBody AddCreditRequest request) {
+        assertSelf(id);
         return clientService.addCredit(id, request.amount());
     }
 
@@ -100,6 +105,7 @@ public class ClientController {
     @ResponseStatus(HttpStatus.OK)
     public ClientResponse adjustLimit(@Parameter(description = "Id do cliente") @PathVariable UUID id,
                                        @Valid @RequestBody AdjustLimitRequest request) {
+        assertSelf(id);
         return clientService.adjustLimit(id, request.newLimit());
     }
 
@@ -119,19 +125,30 @@ public class ClientController {
     @ResponseStatus(HttpStatus.OK)
     public ClientResponse convertPlan(@Parameter(description = "Id do cliente") @PathVariable UUID id,
                                        @Valid @RequestBody ConvertPlanRequest request) {
+        assertSelf(id);
         return clientService.convertPlan(id, request.newPlanType(), request.initialValue());
     }
 
-    @Operation(summary = "Listar transações do cliente", description = "Extrato de débitos e créditos, mais recente primeiro.")
+    @Operation(summary = "Listar transações do cliente", description = "Extrato de débitos e créditos, mais recente primeiro. "
+            + "Só o próprio cliente autenticado pode consultar seu extrato.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de transações (pode ser vazia)",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransactionResponse.class)))),
             @ApiResponse(responseCode = "401", description = "Token ausente ou inválido",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Id não pertence ao cliente autenticado",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{id}/transactions")
     @ResponseStatus(HttpStatus.OK)
     public List<TransactionResponse> transactions(@Parameter(description = "Id do cliente") @PathVariable UUID id) {
+        assertSelf(id);
         return transactionService.listByClient(id);
+    }
+
+    private void assertSelf(UUID id) {
+        if (!authenticatedClient.getClientId().equals(id)) {
+            throw new ClientNotFoundException(id);
+        }
     }
 }

@@ -228,6 +228,8 @@
 2. Parar o polling quando todas as mensagens visíveis estiverem em status terminal (`sent`, `delivered`, `read`, `failed`) — não deixar polling infinito rodando.
 3. Componente de badge (`message-status-badge.component.ts`) com cor/ícone por status, reaproveitando os tokens `--bcb-yellow`/`--bcb-urgent` de `styles.scss`.
 
+**Corrigido pós-entrega:** "status terminal" original só incluía `QUEUED`/`PROCESSING` — como `SENT` e `DELIVERED` também podem avançar por ação externa (`PATCH /messages/{id}/status`, ex.: marcar como entregue/lida pelo Swagger), o polling parava cedo demais e a tela não captava essas mudanças. `NON_TERMINAL_STATUSES` em `chat-page.component.ts` passou a incluir `SENT`/`DELIVERED`, então agora só para em `READ`/`FAILED`. Além disso, o polling em background chamava `loadHistory` do mesmo jeito que a carga inicial, piscando a tela (troca pra spinner) a cada ciclo; `ChatService.loadHistory` ganhou um parâmetro `{ background: true }` que pula o estado de loading nesses casos.
+
 ### TASK-17 — Responsividade e identidade visual aplicada ✅
 **Objetivo:** layout mobile/desktop real, substituindo de vez o placeholder do Angular CLI.
 **Depende de:** TASK-13 a TASK-16
@@ -237,6 +239,8 @@
 1. Remover o conteúdo placeholder de `app.html` (logo do Angular, links de doc) — vira só `<router-outlet>` com um shell (nav/topbar da marca BCB).
 2. Breakpoints via Angular CDK (`BreakpointObserver`) ou CSS media queries simples — decidir conforme complexidade real necessária (provavelmente CSS puro basta pra esse layout).
 3. Revisar as telas das tasks 13–16 num viewport mobile de verdade (não só redimensionar a janela) antes de marcar como pronta.
+
+**Corrigido pós-entrega:** o host que o Router insere pra cada componente roteado (`<app-chat-page>`) não tinha `display`/`flex` definidos — nenhum componente do projeto usava `:host {}`. Dentro do `.chat-panel` (flex column com altura travada em `100dvh`), esse host sem `flex: 1; min-height: 0` ignorava a altura do painel e crescia pro tamanho do conteúdo, empurrando a página inteira (documento) pra baixo em vez do `.chat-body` rolar internamente — sintoma: lista de conversas/composer saindo da tela conforme o histórico crescia, sem scroll próprio. `chat-page.component.scss` ganhou `:host { display: flex; flex-direction: column; flex: 1; min-height: 0; }` (+ `min-height: 0` no `.chat-body`), resolvendo isso e destravando o auto-scroll pro final do histórico que já existia no componente mas nunca tinha o que rolar de fato.
 
 ---
 
@@ -289,7 +293,7 @@
 
 ### TASK-22 — Testes automatizados chave ✅
 **Objetivo:** cobrir a lógica com mais risco de regressão silenciosa.
-**Critério de pronto:** escopo original (`MessageQueueService`, `BillingService` no backend; `AuthService`/interceptor no frontend) cumprido e depois ampliado pra todo `Service` do backend com dependência — 9 classes de teste, 39 testes: `AuthService`, `SessionService`, `ClientService`, `ConversationService`, `MessageService`, `MessageQueueService`, `MessageQueueWorker`, `TransactionService` (todos com `@ExtendWith(MockitoExtension.class)` e `@Mock`/`@InjectMocks` pros colaboradores) e `BillingService` (sem mock — não tem dependência externa). No frontend, `auth.service.spec.ts`, `auth.guard.spec.ts`, `auth.interceptor.spec.ts`.
+**Critério de pronto:** escopo original (`MessageQueueService`, `BillingService` no backend; `AuthService`/interceptor no frontend) cumprido e depois ampliado pra todo `Service` do backend com dependência — 9 classes de teste, 45 testes: `AuthService`, `SessionService`, `ClientService`, `ConversationService`, `MessageService`, `MessageQueueService`, `MessageQueueWorker`, `TransactionService` (todos com `@ExtendWith(MockitoExtension.class)` e `@Mock`/`@InjectMocks` pros colaboradores) e `BillingService` (sem mock — não tem dependência externa). No frontend, `auth.service.spec.ts`, `auth.guard.spec.ts`, `auth.interceptor.spec.ts`.
 
 **STE:**
 1. Um `@Mock` por dependência do service (repository e/ou outro service), `@InjectMocks` pro service sob teste — nunca instanciar o service manualmente num inicializador de campo do teste (o `MockitoExtension` só popula os `@Mock` durante o ciclo de vida do JUnit, depois da construção da classe de teste; um inicializador de campo rodaria antes, com os mocks ainda `null`).
@@ -299,6 +303,11 @@
 ### TASK-23 — Administração completa de planos ✅
 **Objetivo:** cobrir `regras-negocio.md §4` (Administração) por inteiro.
 **Critério de pronto:** endpoints pra adicionar crédito (pré-pago), ajustar limite (pós-pago), converter entre planos com tratamento de saldo/consumo residual, e consultar histórico de transações — com uma tela simples de "conta" no frontend.
+
+**Revisado numa rodada de QA end-to-end pós-entrega** (API + navegador, ver [spec.md §6](spec.md#6-decisões-técnicas-e-trade-offs-pra-citar-na-entrevista)):
+1. **Tratamento do residual na conversão de plano refinado** — a regra original tratava o residual de forma simétrica nas duas direções; ficou claro que isso é assimétrico (PREPAID→POSTPAID carrega dinheiro real do cliente, POSTPAID→PREPAID descarta um limite que nunca foi saldo do cliente). `ClientService.convertPlan` foi reescrito pra refletir isso, com um método por direção (`convertToPrepaid`/`convertToPostpaid`) em vez de condicionais aninhadas.
+2. **Gap de autorização corrigido** — `GET /{id}`, `POST /{id}/credit`, `POST /{id}/limit`, `POST /{id}/plan` e `GET /{id}/transactions` não checavam se o `{id}` da URL era o do cliente autenticado: qualquer cliente logado conseguia ler ou alterar saldo/limite/plano de **qualquer outro cliente** só sabendo o UUID. `ClientController` ganhou `assertSelf(id)` (mesmo padrão 404-sem-vazar-existência de `ConversationService.assertOwnership`), chamado no início dos 5 endpoints.
+3. `ClientResponse.limit` passou a vir `null` (não `0`) pra clientes PREPAID, alinhado com o `limit?: number` opcional do contrato TypeScript de `fullstack.md`.
 
 ### TASK-24 — Segunda opção de frontend (filtros/busca) ✅
 **Objetivo:** a opção de Parte 2 (frontend) que não foi escolhida em [spec.md §3.3](spec.md#33-frontend--escolhido-status-visuais-de-mensagem-enviada-entregue-lida).

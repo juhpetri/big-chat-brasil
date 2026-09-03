@@ -23,6 +23,12 @@ export class AccountService {
   readonly transactions = signal<TransactionResponse[]>([]);
   readonly state = signal<AccountState>('idle');
 
+  refreshClient(): void {
+    this.http.get<ClientResponse>(`/api/clients/${this.clientId()}`).subscribe({
+      next: (client) => this.authService.updateCurrentClient(client),
+    });
+  }
+
   loadTransactions(): void {
     this.state.set('loading');
     this.http.get<TransactionResponse[]>(`/api/clients/${this.clientId()}/transactions`).subscribe({

@@ -64,6 +64,10 @@
   flex-wrap: wrap;
 }
 
+.action-form mat-form-field {
+  flex: 1 1 240px;
+}
+
 .convert-block {
   margin: 0 1.5rem 1rem;
 }

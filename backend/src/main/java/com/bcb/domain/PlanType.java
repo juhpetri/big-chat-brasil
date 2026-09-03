@@ -11,4 +11,8 @@ public enum PlanType {
     PlanType(String description) {
         this.description = description;
     }
+
+    public boolean isPrePaid() {
+        return this.equals(PREPAID);
+    }
 }

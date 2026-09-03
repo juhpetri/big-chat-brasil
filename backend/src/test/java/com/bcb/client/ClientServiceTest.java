@@ -139,7 +139,7 @@ class ClientServiceTest {
     }
 
     @Test
-    void converterDePrepagoParaPospagoRegistraResiduoDoSaldoComoCredito() {
+    void converterDePrepagoParaPospagoSomaSaldoResidualAoLimiteERegistraComoCredito() {
         UUID clientId = UUID.randomUUID();
         Client client = Client.builder().id(clientId).planType(PlanType.PREPAID).active(true).balance(new BigDecimal("3.50")).build();
         when(clientRepository.findByIdForUpdate(clientId)).thenReturn(Optional.of(client));
@@ -151,7 +151,27 @@ class ClientServiceTest {
                 "Conversão de plano para pós-pago");
         assertThat(response.planType()).isEqualTo(PlanType.POSTPAID);
         assertThat(client.getBalance()).isNull();
-        assertThat(client.getMonthlyLimit()).isEqualByComparingTo("50.00");
+        assertThat(client.getMonthlyLimit()).isEqualByComparingTo("53.50");
         assertThat(client.getMonthlyUsage()).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    void converterDePospagoParaPrepagoZeraLimiteNaoUsadoComoDebitoERegistraSaldoInicialComoCredito() {
+        UUID clientId = UUID.randomUUID();
+        Client client = Client.builder().id(clientId).planType(PlanType.POSTPAID).active(true)
+                .monthlyLimit(new BigDecimal("200.00")).monthlyUsage(new BigDecimal("150.00")).build();
+        when(clientRepository.findByIdForUpdate(clientId)).thenReturn(Optional.of(client));
+        when(clientRepository.save(client)).thenReturn(client);
+
+        ClientResponse response = clientService.convertPlan(clientId, PlanType.PREPAID, new BigDecimal("20.00"));
+
+        verify(transactionService).record(clientId, null, TransactionType.DEBIT, new BigDecimal("50.00"),
+                "Limite mensal não utilizado zerado na conversão de plano para pré-pago");
+        verify(transactionService).record(clientId, null, TransactionType.CREDIT, new BigDecimal("20.00"),
+                "Saldo inicial da conversão de plano para pré-pago");
+        assertThat(response.planType()).isEqualTo(PlanType.PREPAID);
+        assertThat(client.getBalance()).isEqualByComparingTo("20.00");
+        assertThat(client.getMonthlyLimit()).isNull();
+        assertThat(client.getMonthlyUsage()).isNull();
     }
 }

@@ -4,11 +4,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   afterNextRender,
   computed,
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +27,7 @@ import { ConversationsService } from '../../core/conversations.service';
 import { MessageStatusBadgeComponent } from '../../shared/message-status-badge.component';
 
 const POLL_INTERVAL_MS = 2000;
-const NON_TERMINAL_STATUSES: MessageStatus[] = ['QUEUED', 'PROCESSING'];
+const NON_TERMINAL_STATUSES: MessageStatus[] = ['QUEUED', 'PROCESSING', 'SENT', 'DELIVERED'];
 
 @Component({
   selector: 'app-chat-page',
@@ -71,8 +73,8 @@ export class ChatPageComponent {
 
   protected readonly cost = computed(() => (this.priority() === 'URGENT' ? 0.5 : 0.25));
 
-  // Filtro client-side — o histórico inteiro já está carregado na tela, então não precisa
-  // de endpoint novo nem de ida ao servidor pra buscar por texto.
+  protected readonly chatBody = viewChild<ElementRef<HTMLDivElement>>('chatBody');
+
   protected readonly filteredMessages = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
     if (!query) {
@@ -82,23 +84,15 @@ export class ChatPageComponent {
   });
 
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
-  // undefined só até a primeira execução do effect abaixo — distingue "carga inicial" (sem
-  // polling/busca antigos pra limpar) de uma troca de conversa de verdade.
   private previousConversationId: string | undefined;
 
   constructor() {
-    // Roda só no browser: evita chamada HTTP durante SSR/prerender (mesmo padrão do resto do app).
     afterNextRender(() => {
       if (this.conversationsService.conversations().length === 0) {
         this.conversationsService.load();
       }
     });
 
-    // Carrega o histórico da conversa atual e recarrega toda vez que conversationId muda. Isso
-    // cobre tanto a carga inicial quanto a troca de conversa — o Router reaproveita a mesma
-    // instância de ChatPageComponent ao navegar entre /conversations/:id1 e /conversations/:id2
-    // (rotas irmãs), então sem reagir à mudança de parâmetro o histórico ficava travado na
-    // primeira conversa aberta.
     effect(() => {
       const id = this.conversationId();
       const isConversationSwitch = this.previousConversationId !== undefined;
@@ -111,9 +105,6 @@ export class ChatPageComponent {
       this.chatService.loadHistory(id);
     });
 
-    // Reage a toda mudança na lista de mensagens (carga inicial, envio otimista, resultado do polling).
-    // Enquanto existir alguma mensagem não-terminal, agenda o próximo poll; quando não existir mais, o
-    // efeito simplesmente não agenda nada de novo e o polling para sozinho.
     effect(() => {
       const hasNonTerminal = this.chatService
         .messages()
@@ -124,13 +115,24 @@ export class ChatPageComponent {
       }
     });
 
+    effect(() => {
+      this.filteredMessages();
+      const el = this.chatBody()?.nativeElement;
+      if (!el) {
+        return;
+      }
+      queueMicrotask(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    });
+
     this.destroyRef.onDestroy(() => this.clearPoll());
   }
 
   private schedulePoll(): void {
     this.pollTimer = setTimeout(() => {
       this.pollTimer = null;
-      this.chatService.loadHistory(this.conversationId());
+      this.chatService.loadHistory(this.conversationId(), { background: true });
     }, POLL_INTERVAL_MS);
   }
 

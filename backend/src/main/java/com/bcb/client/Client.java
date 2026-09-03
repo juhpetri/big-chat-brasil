@@ -58,7 +58,7 @@ public class Client {
     }
 
     public ClientResponse toClientResponse() {
-        BigDecimal remainingLimit = nonNull(monthlyLimit) ? monthlyLimit.subtract(monthlyUsage) : BigDecimal.ZERO;
+        BigDecimal remainingLimit = nonNull(monthlyLimit) ? monthlyLimit.subtract(monthlyUsage) : null;
         return new ClientResponse(id, name, documentId,
                 planType, balance, remainingLimit, active);
     }
@@ -67,6 +67,10 @@ public class Client {
         return PlanType.PREPAID.equals(planType)
                 ? balance
                 : monthlyLimit.subtract(monthlyUsage);
+    }
+
+    public boolean carriesResidualTo(PlanType newPlanType) {
+        return PlanType.PREPAID.equals(planType) && PlanType.POSTPAID.equals(newPlanType);
     }
 
     public void checkAlreadyPlanType(PlanType newPlanType) {

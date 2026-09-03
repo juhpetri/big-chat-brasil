@@ -12,14 +12,20 @@ export class ChatService {
   readonly messages = signal<MessageResponse[]>([]);
   readonly historyState = signal<ChatHistoryState>('idle');
 
-  loadHistory(conversationId: string): void {
-    this.historyState.set('loading');
+  loadHistory(conversationId: string, options: { background?: boolean } = {}): void {
+    if (!options.background) {
+      this.historyState.set('loading');
+    }
     this.http.get<MessageResponse[]>(`/api/conversations/${conversationId}/messages`).subscribe({
       next: (data) => {
         this.messages.set(data);
         this.historyState.set('idle');
       },
-      error: () => this.historyState.set('error'),
+      error: () => {
+        if (!options.background) {
+          this.historyState.set('error');
+        }
+      },
     });
   }
 
