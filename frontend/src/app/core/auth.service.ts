@@ -1,7 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
+import { AccountService } from './account.service';
 import { AuthResponse, ClientResponse } from './auth.models';
+import { ChatService } from './chat.service';
+import { ConversationsService } from './conversations.service';
 
 const TOKEN_KEY = 'bcb_token';
 const CLIENT_KEY = 'bcb_client';
@@ -9,6 +12,7 @@ const CLIENT_KEY = 'bcb_client';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly injector = inject(Injector);
 
   private readonly token = signal<string | null>(this.readStoredToken());
   readonly currentClient = signal<ClientResponse | null>(this.readStoredClient());
@@ -25,6 +29,10 @@ export class AuthService {
     this.token.set(null);
     this.currentClient.set(null);
     this.clearStorage();
+
+    this.injector.get(ChatService).reset();
+    this.injector.get(ConversationsService).reset();
+    this.injector.get(AccountService).reset();
   }
 
   getToken(): string | null {

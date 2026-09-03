@@ -20,7 +20,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
             select m.conversation.id as conversationId, count(m) as unreadCount
             from Message m
             where m.conversation.id in :conversationIds
-              and m.sentByType = com.bcb.domain.SenderType.CLIENT
+              and m.sentByType = com.bcb.domain.SenderType.USER
               and m.status <> com.bcb.domain.MessageStatus.READ
             group by m.conversation.id
             """)

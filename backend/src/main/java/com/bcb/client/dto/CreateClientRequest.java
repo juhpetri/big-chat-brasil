@@ -5,6 +5,7 @@ import com.bcb.client.DocumentId;
 import com.bcb.domain.DocumentType;
 import com.bcb.domain.PlanType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,11 +21,22 @@ public record CreateClientRequest(
         @NotNull(message = "Tipo de plano não informado")
         @Schema(description = "PREPAID usa balance (saldo debitado por mensagem); POSTPAID usa initialLimit (limite mensal)")
         PlanType planType,
+        @DecimalMin(message = "Saldo inicial deve ser maior ou igual a \"0\"", value = "0")
         @Schema(description = "Saldo inicial — só usado se planType = PREPAID")
         BigDecimal balance,
         @DecimalMin(message = "Valor inicial deve ser maior ou igual a \"0\"", value = "0")
         @Schema(description = "Limite mensal — só usado se planType = POSTPAID")
         BigDecimal initialLimit) {
+
+    @AssertTrue(message = "Saldo inicial deve ser informado para clientes PREPAID")
+    public boolean isBalanceInformedWhenPrepaid() {
+        return !PlanType.PREPAID.equals(planType) || balance != null;
+    }
+
+    @AssertTrue(message = "Limite mensal deve ser informado para clientes POSTPAID")
+    public boolean isInitialLimitInformedWhenPostpaid() {
+        return !PlanType.POSTPAID.equals(planType) || initialLimit != null;
+    }
 
     public Client toClient() {
         DocumentId documentId = DocumentId.of(document);

@@ -10,6 +10,7 @@ import com.bcb.domain.PlanType;
 import com.bcb.domain.TransactionType;
 import com.bcb.transaction.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +29,17 @@ public class ClientService {
         Client client = clientRequest.toClient();
         validateClientExistent(client.getDocumentId());
 
-        Client clientSaved = clientRepository.save(client);
+        Client clientSaved = saveNewClient(client);
 
         return clientSaved.toClientResponse();
+    }
+
+    private Client saveNewClient(Client client) {
+        try {
+            return clientRepository.save(client);
+        } catch (DataIntegrityViolationException exception) {
+            throw new DocumentAlreadyExistsException();
+        }
     }
 
     public ClientResponse getClientById(UUID clientId) {

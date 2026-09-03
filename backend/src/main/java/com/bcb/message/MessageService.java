@@ -14,6 +14,8 @@ import com.bcb.message.exceptions.MessageNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,9 +43,23 @@ public class MessageService {
         Message savedMessage = createMessage(request, conversationId);
 
         conversationService.touchLastMessageAt(conversationId, savedMessage.getQueuedAt());
-        messageQueueService.enqueue(savedMessage);
+        enqueueAfterCommit(savedMessage);
 
         return toResponse(savedMessage, conversationId, client);
+    }
+
+    private void enqueueAfterCommit(Message message) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            messageQueueService.enqueue(message);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messageQueueService.enqueue(message);
+            }
+        });
     }
 
     public List<MessageResponse> listByConversation(UUID conversationId) {

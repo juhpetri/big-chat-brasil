@@ -11,6 +11,11 @@ export class ConversationsService {
   readonly conversations = signal<ConversationResponse[]>([]);
   readonly state = signal<ConversationsState>('idle');
 
+  reset(): void {
+    this.conversations.set([]);
+    this.state.set('idle');
+  }
+
   load(): void {
     this.state.set('loading');
     this.http.get<ConversationResponse[]>('/api/conversations').subscribe({

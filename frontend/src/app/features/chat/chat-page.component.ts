@@ -101,16 +101,15 @@ export class ChatPageComponent {
       if (isConversationSwitch) {
         this.clearPoll();
         this.searchQuery.set('');
+        this.draft.set('');
+        this.priority.set('NORMAL');
+        this.sendError.set('');
       }
       this.chatService.loadHistory(id);
     });
 
     effect(() => {
-      const hasNonTerminal = this.chatService
-        .messages()
-        .some((message) => NON_TERMINAL_STATUSES.includes(message.status));
-
-      if (hasNonTerminal && this.pollTimer === null) {
+      if (this.hasNonTerminalMessages() && this.pollTimer === null) {
         this.schedulePoll();
       }
     });
@@ -129,11 +128,21 @@ export class ChatPageComponent {
     this.destroyRef.onDestroy(() => this.clearPoll());
   }
 
+  private hasNonTerminalMessages(): boolean {
+    return this.chatService.messages().some((message) => NON_TERMINAL_STATUSES.includes(message.status));
+  }
+
   private schedulePoll(): void {
     this.pollTimer = setTimeout(() => {
       this.pollTimer = null;
-      this.chatService.loadHistory(this.conversationId(), { background: true });
+      this.chatService.loadHistory(this.conversationId(), { background: true }, () => this.maybeSchedulePoll());
     }, POLL_INTERVAL_MS);
+  }
+
+  private maybeSchedulePoll(): void {
+    if (this.hasNonTerminalMessages() && this.pollTimer === null) {
+      this.schedulePoll();
+    }
   }
 
   private clearPoll(): void {

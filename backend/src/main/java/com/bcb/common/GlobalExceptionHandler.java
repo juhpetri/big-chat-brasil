@@ -3,8 +3,12 @@ package com.bcb.common;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -14,6 +18,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handle(ApiException apiException) {
         ErrorResponse errorResponse = new ErrorResponse(apiException.getClass().getSimpleName(), apiException.getMessage());
         return ResponseEntity.status(apiException.getStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handle(MethodArgumentNotValidException exception) {
+        String message = exception.getBindingResult().getAllErrors().stream()
+                .map(ObjectError::getDefaultMessage)
+                .collect(Collectors.joining("; "));
+        ErrorResponse errorResponse = new ErrorResponse("VALIDATION_ERROR", message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     @ExceptionHandler(DomainException.class)
